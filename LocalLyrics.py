@@ -50,9 +50,20 @@ class LocalLyrics(GObject.Object, Peas.Activatable):
         songFile = urllib.parse.unquote(songFile, 'utf-8')
 
         if os.path.isfile(songFile):
-            lrcFile = open(songFile, 'r', encoding='utf-16')
-            lrc = ''.join(lrcFile.readlines())
-            lrcFile.close()
+            lrcFile = None
+            lrc = ''
+            try:
+                lrcFile = open(songFile, 'r', encoding='utf-16')
+                lrc = ''.join(lrcFile.readlines())
+                lrcFile.close()
+            except UnicodeError:
+                print("Not utf-16")
+                lrcFile = open(songFile, 'r', encoding='utf-8')
+                lrc = ''.join(lrcFile.readlines())
+                lrcFile.close()
+            except:
+                pass
+
             self.lrc_content = pylrc.parse(lrc)
 
             self.newest_index = 0
@@ -60,10 +71,11 @@ class LocalLyrics(GObject.Object, Peas.Activatable):
             #self.need_change = True
             self.line_num = len(self.lrc_content)
             Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self.idle_showLyrics)
-        else:
-            self.lrc_content = None
-            for i in range(3):
-                self.lineBoxes[i].set_markup("")
+            return
+
+        self.lrc_content = None
+        for i in range(3):
+            self.lineBoxes[i].set_markup("")
 
     def idle_showLyrics(self):
         if self.line_index == self.line_num:
