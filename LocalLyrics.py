@@ -49,6 +49,8 @@ class LocalLyrics(GObject.Object, Peas.Activatable):
         songFile = songFile[7:index] + ".lrc"
         songFile = urllib.parse.unquote(songFile, 'utf-8')
 
+        noLyricsFound = False
+
         if os.path.isfile(songFile):
             lrcFile = None
             lrc = ''
@@ -72,10 +74,15 @@ class LocalLyrics(GObject.Object, Peas.Activatable):
             self.line_num = len(self.lrc_content)
             Gdk.threads_add_idle(GLib.PRIORITY_DEFAULT_IDLE, self.idle_showLyrics)
             return
+        else:
+            noLyricsFound = True
 
         self.lrc_content = None
         for i in range(3):
             self.lineBoxes[i].set_markup("")
+        
+        if noLyricsFound:
+            self.line0.set_markup("No Lyrics Found")
 
     def idle_showLyrics(self):
         if self.line_index == self.line_num:
